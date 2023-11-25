@@ -47,6 +47,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut player = invaders::player::Player::new();
     let mut instant = Instant::now();
+    let mut invaders = invaders::invaders::Invaders::new();
     // Game loop
     'gameloop: loop {
         // Pre-frame init
@@ -81,9 +82,19 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         // Update
         player.update(delta);
+        if invaders.update(delta) {
+            audio.play("move");
+        }
 
         // Draw & render
-        player.draw(&mut curr_frame);
+        // player.draw(&mut curr_frame);
+        // invaders.draw(&mut curr_frame);
+
+        let drawables: Vec<&dyn Drawable> = vec![&player, &invaders];
+        for drawable in drawables {
+            drawable.draw(&mut curr_frame);
+        }
+        
         let _ = render_transciver.send(curr_frame)?;
         std::thread::sleep(Duration::from_millis(1));
     }
