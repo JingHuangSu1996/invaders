@@ -1,4 +1,4 @@
-use std::{error::Error, io, time::Duration, sync::mpsc};
+use std::{error::Error, io, time::{Duration, Instant}, sync::mpsc};
 use crossterm::{terminal, cursor, ExecutableCommand, event::{self, Event, KeyCode}};
 use invaders::render;
 use rusty_audio::Audio;
@@ -46,9 +46,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     });
 
     let mut player = invaders::player::Player::new();
+    let mut instant = Instant::now();
     // Game loop
     'gameloop: loop {
         // Pre-frame init
+        let delta = instant.elapsed();
+        instant = Instant::now();
         let mut curr_frame = invaders::frame::new_frame();
         // Input 
         while event::poll(Duration::default())? {
@@ -66,10 +69,18 @@ fn main() -> Result<(), Box<dyn Error>> {
                         player.move_right();
                         audio.play("move");
                     }
+                    KeyCode::Enter | KeyCode::Char(' ') => {
+                        if player.shoot() {
+                            audio.play("pew");
+                        }
+                    },
                     _ => {}
                 }
             }
         }
+
+        // Update
+        player.update(delta);
 
         // Draw & render
         player.draw(&mut curr_frame);
